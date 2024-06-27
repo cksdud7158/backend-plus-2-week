@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
@@ -25,5 +26,6 @@ export class Lecture {
   createdAt: Date;
 
   @OneToMany(() => LectureSchedule, (schedule) => schedule.lecture)
+  @JoinColumn()
   schedules: LectureSchedule[];
 }

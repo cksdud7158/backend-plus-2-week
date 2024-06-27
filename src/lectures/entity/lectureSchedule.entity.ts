@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -21,6 +22,7 @@ export class LectureSchedule {
     createForeignKeyConstraints: false,
     nullable: false,
   })
+  @JoinColumn()
   lecture: Lecture;
 
   @Column({ type: "date" })
