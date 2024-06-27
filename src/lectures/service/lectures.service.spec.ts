@@ -42,6 +42,7 @@ describe("LecturesService", () => {
             }),
             findByLectureIdAndDate: jest.fn(),
             insert: jest.fn(),
+            registrationHistory: jest.fn(),
           },
         },
         {

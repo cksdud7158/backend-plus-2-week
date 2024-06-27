@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { IRegistrationHistoryRepository } from "./registrationHistory.repository.interface";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { EntityManager, Repository } from "typeorm";
 import { RegistrationHistory } from "../../entity/registrationHistory.entity";
 import { RegistrationHistoriesDomain } from "../../domain/registrationHistories.domain";
 import { RegistrationHistoriesMapper } from "../../mapper/registrationHistories.mapper";
@@ -22,8 +22,9 @@ export class RegistrationHistoryRepositoryImpl
     userId: number,
     lectureId: number,
     registrationDate: string,
+    manager?: EntityManager,
   ): Promise<RegistrationHistoriesDomain> {
-    const registrationHistoryList = await this.registrationHistory.find({
+    const options = {
       relations: {
         lectureSchedule: {
           lecture: true,
@@ -38,7 +39,15 @@ export class RegistrationHistoryRepositoryImpl
           },
         },
       },
-    });
+    };
+    let registrationHistoryList: RegistrationHistory[];
+    if (manager) {
+      registrationHistoryList = await manager.find(RegistrationHistory, {
+        ...options,
+        lock: { mode: "pessimistic_write" },
+      });
+    } else
+      registrationHistoryList = await this.registrationHistory.find(options);
 
     return RegistrationHistoriesMapper.toDomain(registrationHistoryList);
   }
@@ -46,8 +55,9 @@ export class RegistrationHistoryRepositoryImpl
   async findByLectureIdAndDate(
     lectureId: number,
     registrationDate: string,
+    manager?: EntityManager,
   ): Promise<RegistrationHistoriesDomain> {
-    const registrationHistoryList = await this.registrationHistory.find({
+    const options = {
       relations: {
         lectureSchedule: { lecture: true },
       },
@@ -60,7 +70,16 @@ export class RegistrationHistoryRepositoryImpl
           },
         },
       },
-    });
+    };
+    let registrationHistoryList: RegistrationHistory[];
+    if (manager) {
+      registrationHistoryList = await manager.find(
+        RegistrationHistory,
+        options,
+      );
+    } else {
+      registrationHistoryList = await this.registrationHistory.find(options);
+    }
 
     return RegistrationHistoriesMapper.toDomain(registrationHistoryList);
   }
@@ -69,8 +88,9 @@ export class RegistrationHistoryRepositoryImpl
     userId: number,
     lectureId: number,
     registrationDate: string,
+    manager?: EntityManager,
   ): Promise<boolean> {
-    const lectureSchedule = await this.lectureSchedule.findOne({
+    const options = {
       relations: {
         lecture: true,
       },
@@ -80,24 +100,29 @@ export class RegistrationHistoryRepositoryImpl
           id: lectureId,
         },
       },
-    });
+    };
+    let lectureSchedule: LectureSchedule;
+    if (manager) {
+      lectureSchedule = await manager.findOne(LectureSchedule, options);
+    } else lectureSchedule = await this.lectureSchedule.findOne(options);
 
     if (!lectureSchedule) {
       throw new BadRequestException("해당 하는 날짜에 강의가 없습니다.");
     }
 
-    await this.registrationHistory
-      .createQueryBuilder()
-      .insert()
-      .into(RegistrationHistory)
-      .values([
-        {
-          userId: userId,
-          status: true,
-          lectureSchedule: lectureSchedule,
-        },
-      ])
-      .execute();
+    if (manager) {
+      await manager.insert(RegistrationHistory, {
+        userId: userId,
+        status: true,
+        lectureSchedule: lectureSchedule,
+      });
+    } else {
+      await this.registrationHistory.insert({
+        userId: userId,
+        status: true,
+        lectureSchedule: lectureSchedule,
+      });
+    }
 
     return true;
   }

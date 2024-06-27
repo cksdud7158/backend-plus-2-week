@@ -8,6 +8,8 @@ import { LecturesDomain } from "../domain/lectures.domain";
 import { ApplyReqDto } from "../dto/apply.dto";
 import { lecturesServiceProvider } from "../service/point.service.provider";
 import { RegistrationHistoriesDomain } from "../domain/registrationHistories.domain";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { typeORMConfig } from "../../../typeorm.config";
 
 describe("LecturesController", () => {
   let controller: LecturesController;
@@ -19,6 +21,7 @@ describe("LecturesController", () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [TypeOrmModule.forRoot(typeORMConfig)],
       controllers: [LecturesController],
       providers: [
         lecturesServiceProvider,
@@ -37,6 +40,7 @@ describe("LecturesController", () => {
                 ]),
               );
             }),
+            registrationHistory: jest.fn(),
           },
         },
         {
