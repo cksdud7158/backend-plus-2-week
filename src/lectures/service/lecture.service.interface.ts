@@ -7,6 +7,13 @@ export interface ILecturesService {
 
   getRegistrationStatus(
     userId: number,
+    lectureId: number,
+    registrationDate: string,
+  ): Promise<boolean>;
+
+  apply(
+    userId: number,
+    lectureId: number,
     registrationDate: string,
   ): Promise<boolean>;
 }

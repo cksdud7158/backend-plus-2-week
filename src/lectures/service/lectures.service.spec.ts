@@ -1,7 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { lecturesServiceProvider } from "./point.service.provider";
-import { RegistrationHistory } from "../entity/registrationHistory.entity";
-import { ILECTURES_SERVICE, ILecturesService } from "./point.service.interface";
+import {
+  ILECTURES_SERVICE,
+  ILecturesService,
+} from "./lecture.service.interface";
 import {
   IREGISTRATION_HISTORY_REPOSITORY,
   IRegistrationHistoryRepository,
@@ -11,6 +13,8 @@ import {
   ILectureRepository,
 } from "../repository/lecture/lecture.repository.interface";
 import { LecturesDomain } from "../domain/lectures.domain";
+import { RegistrationHistoriesDomain } from "../domain/registrationHistories.domain";
+import { BadRequestException } from "@nestjs/common";
 
 describe("LecturesService", () => {
   let service: ILecturesService;
@@ -24,7 +28,20 @@ describe("LecturesService", () => {
         {
           provide: IREGISTRATION_HISTORY_REPOSITORY,
           useValue: {
-            findByUserIdAndDate: jest.fn(),
+            findByUserIdAndLectureIdAndDate: jest.fn(() => {
+              return Promise.resolve(
+                new RegistrationHistoriesDomain([
+                  {
+                    id: 1,
+                    status: true,
+                    createdAt: 0,
+                    userId: 1,
+                  },
+                ]),
+              );
+            }),
+            findByLectureIdAndDate: jest.fn(),
+            insert: jest.fn(),
           },
         },
         {
@@ -48,36 +65,47 @@ describe("LecturesService", () => {
   });
 
   const userId = 1;
+  const lectureId = 1;
   const registrationDate = "2024-06-24";
   const status = true;
 
   describe("특강 신청 완료 여부 조회 (getRegistrationStatus)", () => {
-    it("특강 신청 완료", async () => {
+    it("특강 신청 완료 상태", async () => {
       //given
-      const registrationHistory: RegistrationHistory = {
-        lectureSchedule: undefined,
-        id: 0,
-        userId,
-        status,
-        createdAt: new Date(),
-      };
+      const registrationHistoriesDomain = new RegistrationHistoriesDomain([
+        {
+          id: 1,
+          status,
+          createdAt: 0,
+          userId,
+        },
+      ]);
       //when
       jest
-        .spyOn(registrationHistoryRepository, "findByUserIdAndDate")
-        .mockResolvedValue([registrationHistory]);
-      const res = await service.getRegistrationStatus(userId, registrationDate);
+        .spyOn(registrationHistoryRepository, "findByUserIdAndLectureIdAndDate")
+        .mockResolvedValue(registrationHistoriesDomain);
+      const res = await service.getRegistrationStatus(
+        userId,
+        lectureId,
+        registrationDate,
+      );
 
       //then
       expect(res).toBeTruthy();
     });
-    it("특강 신청 실패", async () => {
+    it("특강 신청 실패 상태", async () => {
       //given
+      const lecturesDomain = new RegistrationHistoriesDomain([]);
 
       //when
       jest
-        .spyOn(registrationHistoryRepository, "findByUserIdAndDate")
-        .mockResolvedValue([]);
-      const res = await service.getRegistrationStatus(userId, registrationDate);
+        .spyOn(registrationHistoryRepository, "findByUserIdAndLectureIdAndDate")
+        .mockResolvedValue(lecturesDomain);
+      const res = await service.getRegistrationStatus(
+        userId,
+        lectureId,
+        registrationDate,
+      );
 
       //then
       expect(res).toBeFalsy();
@@ -105,6 +133,63 @@ describe("LecturesService", () => {
 
       //then
       expect(res).toEqual(lecturesDomain);
+    });
+  });
+
+  describe("특강 신청 (apply)", () => {
+    it("특강 신청 완료", async () => {
+      //given
+
+      //when
+      jest
+        .spyOn(registrationHistoryRepository, "findByUserIdAndLectureIdAndDate")
+        .mockResolvedValue(new RegistrationHistoriesDomain([]));
+
+      jest
+        .spyOn(registrationHistoryRepository, "findByLectureIdAndDate")
+        .mockResolvedValue(new RegistrationHistoriesDomain([]));
+      const res = await service.apply(userId, lectureId, registrationDate);
+
+      //then
+      expect(res).toBeTruthy();
+    });
+
+    it("특강 신청 실패(이미 신청한 경우)", async () => {
+      //given
+
+      //when
+
+      const res = service.apply(userId, lectureId, registrationDate);
+
+      //then
+      await expect(res).rejects.toThrow(BadRequestException);
+    });
+
+    it("특강 신청 실패(이미 신청한 경우)", async () => {
+      //given
+
+      //when
+      jest
+        .spyOn(registrationHistoryRepository, "findByUserIdAndLectureIdAndDate")
+        .mockResolvedValue(new RegistrationHistoriesDomain([]));
+
+      jest
+        .spyOn(registrationHistoryRepository, "findByLectureIdAndDate")
+        .mockResolvedValue(
+          new RegistrationHistoriesDomain(
+            Array.from({ length: 30 }).map(() => ({
+              id: 0,
+              userId,
+              status: true,
+              createdAt: 0,
+            })),
+          ),
+        );
+
+      const res = await service.apply(userId, lectureId, registrationDate);
+
+      //then
+      expect(res).toBeFalsy();
     });
   });
 });
