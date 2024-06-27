@@ -6,6 +6,7 @@ import {
   ILECTURES_SERVICE,
   ILecturesService,
 } from "../service/point.service.interface";
+import { LecturesDomain } from "../domain/lectures.domain";
 
 @Controller("lectures")
 export class LecturesController {
@@ -13,6 +14,11 @@ export class LecturesController {
     @Inject(ILECTURES_SERVICE)
     private readonly lecturesService: ILecturesService,
   ) {}
+
+  @Get("")
+  async lectures(): Promise<LecturesDomain> {
+    return await this.lecturesService.lectures();
+  }
 
   @Get("application/:userId/:registrationDate")
   async registrationStatus(

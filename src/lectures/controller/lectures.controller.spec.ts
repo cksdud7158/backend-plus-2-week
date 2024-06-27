@@ -2,8 +2,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { LecturesController } from "./lectures.controller";
 import { LecturesServiceImpl } from "../service/lectures.service";
 import { lecturesServiceProvider } from "../service/point.service.provider";
-import { IREGISTRATION_HISTORY_REPOSITORY } from "../repository/registrationHistory.repository.interface";
+import { IREGISTRATION_HISTORY_REPOSITORY } from "../repository/registrationHistory/registrationHistory.repository.interface";
 import { ILECTURES_SERVICE } from "../service/point.service.interface";
+import { ILECTURE_REPOSITORY } from "../repository/lecture/lecture.repository.interface";
+import { LecturesDomain } from "../domain/lectures.domain";
 
 describe("LecturesController", () => {
   let controller: LecturesController;
@@ -18,6 +20,12 @@ describe("LecturesController", () => {
           provide: IREGISTRATION_HISTORY_REPOSITORY,
           useValue: {
             findByUserIdAndDate: jest.fn(),
+          },
+        },
+        {
+          provide: ILECTURE_REPOSITORY,
+          useValue: {
+            findAll: jest.fn(),
           },
         },
       ],
@@ -36,6 +44,28 @@ describe("LecturesController", () => {
 
       //when
       jest.spyOn(service, "getRegistrationStatus").mockResolvedValue(true);
+      const res = controller.registrationStatus(userId, registrationDate);
+
+      //then
+      expect(res).toBeTruthy();
+    });
+  });
+
+  describe("/lectures (GET)", () => {
+    it("특강 목록 조회", () => {
+      //given
+      const lectures = new LecturesDomain([
+        {
+          id: 1,
+          title: "title1",
+          description: "desc1",
+          instructorName: "깅시1",
+          lectureDate: ["2024-06-27"],
+          createdAt: 0,
+        },
+      ]);
+      //when
+      jest.spyOn(service, "lectures").mockResolvedValue(lectures);
       const res = controller.registrationStatus(userId, registrationDate);
 
       //then
