@@ -7,9 +7,12 @@ import { RegistrationHistory } from "./entity/registrationHistory.entity";
 import { registrationHistoryRepositoryProviders } from "./repository/registrationHistory/registrationHistory.repository.provider";
 import { lectureRepositoryProviders } from "./repository/lecture/lecture.repository.provider";
 import { Lecture } from "./entity/lecture.entity";
+import { LectureSchedule } from "./entity/lectureSchedule.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RegistrationHistory, Lecture])],
+  imports: [
+    TypeOrmModule.forFeature([RegistrationHistory, Lecture, LectureSchedule]),
+  ],
   controllers: [LecturesController],
   providers: [
     lecturesServiceProvider,
