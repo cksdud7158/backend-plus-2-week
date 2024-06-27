@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { IRegistrationHistoryRepository } from "./registrationHistory.repository.interface";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { RegistrationHistory } from "../entity/registrationHistory.entity";
+import { RegistrationHistory } from "../../entity/registrationHistory.entity";
 
 @Injectable()
 export class RegistrationHistoryRepositoryImpl

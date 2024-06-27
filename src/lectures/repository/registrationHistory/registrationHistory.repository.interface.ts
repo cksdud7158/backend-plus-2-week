@@ -1,4 +1,4 @@
-import { RegistrationHistory } from "../entity/registrationHistory.entity";
+import { RegistrationHistory } from "../../entity/registrationHistory.entity";
 
 export const IREGISTRATION_HISTORY_REPOSITORY =
   "IRegistrationHistoryRepository";
