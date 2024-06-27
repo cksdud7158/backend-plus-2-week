@@ -21,8 +21,8 @@ export class Lecture {
   @Column("varchar", { length: 50 })
   instructorName: string;
 
-  @CreateDateColumn()
-  createdAt: string;
+  @CreateDateColumn({ type: "timestamp" })
+  createdAt: Date;
 
   @OneToMany(() => LectureSchedule, (schedule) => schedule.lecture)
   schedules: LectureSchedule[];

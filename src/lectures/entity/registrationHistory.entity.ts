@@ -27,5 +27,5 @@ export class RegistrationHistory {
   status: boolean;
 
   @CreateDateColumn()
-  createdAt;
+  createdAt: Date;
 }
